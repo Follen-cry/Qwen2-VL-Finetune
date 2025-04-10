@@ -17,7 +17,7 @@ GRAD_ACCUM_STEPS=$((GLOBAL_BATCH_SIZE / (BATCH_PER_DEVICE * NUM_DEVICES)))
 # You should freeze the the merger also, becuase the merger is included in the vision_tower.
 
 deepspeed src/training/train.py \
-    --use_liger True \
+    --use_liger False \
     --lora_enable True \
     --vision_lora True \
     --use_dora False \
@@ -28,8 +28,8 @@ deepspeed src/training/train.py \
     --num_lora_modules -1 \
     --deepspeed scripts/zero3.json \
     --model_id $MODEL_NAME \
-    --data_path /path/to/your/training/data.json \
-    --image_folder /path/to/your/image/folder \
+    --data_path /content/drive/MyDrive/ColabCodeWorkspace/mllm_project/memory_dataset.json \
+    --image_folder "/content/drive/My Drive/ColabCodeWorkspace/mllm_project/research/dataset"\
     --remove_unused_columns False \
     --freeze_vision_tower True \
     --freeze_llm True \

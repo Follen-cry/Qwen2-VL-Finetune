@@ -6,9 +6,15 @@ from torch.nn import CrossEntropyLoss
 import numpy as np
 import transformers.models.qwen2_vl.modeling_qwen2_vl
 import transformers.models.qwen2_5_vl.modeling_qwen2_5_vl
-from liger_kernel.transformers.fused_linear_cross_entropy import (
-    LigerFusedLinearCrossEntropyLoss
-)
+try:
+    from liger_kernel.transformers.fused_linear_cross_entropy import LigerFusedLinearCrossEntropyLoss
+    use_liger = True
+except ImportError:
+    use_liger = False
+
+#from liger_kernel.transformers.fused_linear_cross_entropy import (
+   # LigerFusedLinearCrossEntropyLoss
+#)
 
 def replace_qwen_2_with_mixed_modality_forward(use_liger=True):
     if use_liger:
@@ -147,8 +153,17 @@ def qwen_2_mixed_modality_forward_with_flce(
         shift_hidden_states = shift_hidden_states.view(-1, self.config.hidden_size)
         shift_labels = shift_labels.view(-1)
 
-        lce = LigerFusedLinearCrossEntropyLoss()
-        loss = lce(self.lm_head.weight, shift_hidden_states, shift_labels)
+        if use_liger:
+            lce = LigerFusedLinearCrossEntropyLoss()
+            loss = lce(self.lm_head.weight, shift_hidden_states, shift_labels)
+        else:
+            loss_fct = torch.nn.CrossEntropyLoss()
+            loss = loss_fct(
+            shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+            )
+
+        #lce = LigerFusedLinearCrossEntropyLoss()
+        #loss = lce(self.lm_head.weight, shift_hidden_states, shift_labels)
     else:
         logits = self.lm_head(hidden_states)
         if labels is not None:
